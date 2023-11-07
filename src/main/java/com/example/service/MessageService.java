@@ -109,6 +109,7 @@ public class MessageService {
             if (text.length() > 254) {
                 throw new ExcessiveCharactersException("Message is too long");
             }
+            messageRepository.save(newMessage);
         }
         catch(DataAccessException e) {
             new CustomDataAccessException("Something went wrong", e);
@@ -130,4 +131,5 @@ public class MessageService {
 
         return null;
     }
+    
 }

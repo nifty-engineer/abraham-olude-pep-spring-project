@@ -172,5 +172,4 @@ public class Message {
                 ", time_posted_epoch=" + time_posted_epoch +
                 '}';
     }
-
 }
