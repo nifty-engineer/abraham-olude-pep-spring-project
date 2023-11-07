@@ -59,7 +59,6 @@ As a user, I should be able to verify my login on the endpoint POST localhost:80
 - The login will be successful if and only if the username and password provided in the request body JSON match a real account existing on the database. If successful, the response body should contain a JSON of the account in the response body, including its account_id. The response status should be 200 OK, which is the default.
 - If the login is not successful, the response status should be 401. (Unauthorized)
 
-
 ## 3: Our API should be able to process the creation of new messages.
 
 As a user, I should be able to submit a new post on the endpoint POST localhost:8080/messages. The request body will contain a JSON representation of a message, which should be persisted to the database, but will not contain a message_id.

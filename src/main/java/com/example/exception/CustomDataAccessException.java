@@ -4,5 +4,6 @@ public class CustomDataAccessException extends Exception{
 
     public CustomDataAccessException(String message, Exception e) {
         super(message);
-    }    
+    }
+    
 }
