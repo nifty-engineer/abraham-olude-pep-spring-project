@@ -2,118 +2,88 @@ package com.example.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import com.example.entity.Message;
 import com.example.exception.BlankException;
-import com.example.exception.CustomDataAccessException;
 import com.example.exception.ExcessiveCharactersException;
-import com.example.exception.NonExistentUser;
+import com.example.exception.RegistrationException;
+import com.example.exception.ResourceNotFoundException;
+import com.example.repository.AccountRepository;
 import com.example.repository.MessageRepository;
 
 @Service
 public class MessageService {
 
-    @Autowired(required = true)
     private MessageRepository messageRepository;
+    private AccountRepository accountRepository;
+
+    @Autowired
+    public MessageService(MessageRepository messageRepository, AccountRepository accountRepository) {
+        this.messageRepository = messageRepository;
+        this.accountRepository = accountRepository;
+    }
 
     public Message createMessage(Message message) {
         
-        try {
-            String text = message.getMessage_text();
-            if (text.isBlank()) {
-                throw new BlankException("Enter a valid message");
-            }
-            if (text.length() > 254) {
-                throw new ExcessiveCharactersException("Message is too long");
-            }
-            List<Message> allMessages = messageRepository.findAll();
-            List<Integer> allPostedBys = new ArrayList<>();
-            for(Message msg : allMessages) {
-                allPostedBys.add(msg.getPosted_by());
-            }
-            if (!allPostedBys.contains(message.getPosted_by())) {
-                throw new NonExistentUser("Message is not from a registered account");
-            }
-
-            return messageRepository.save(message);            
+        String text = message.getMessage_text();
+        if (text.isBlank()) {
+            throw new BlankException("Enter a valid message");
         }
-        catch(DataAccessException e) {
-            new CustomDataAccessException("Something went wrong", e);
+        if (text.length() > 254) {
+            throw new ExcessiveCharactersException("Message is too long");
         }
         
-        return null;
+        accountRepository.findById(message.getPosted_by())
+                    .orElseThrow(() -> new RegistrationException("Message is not from a registered account"));
+
+        return messageRepository.save(message);            
     }
 
     public List<Message> retrieveAllMessages() {
 
-        try {
-            return messageRepository.findAll();
-        }
-        catch(DataAccessException e) {
-            new CustomDataAccessException("Something went wrong", e);
-        }
-
-        return new ArrayList<>();
+        return messageRepository.findAll();
     }
 
     public Message retrieveMessageByMessageId(Integer messageId) {
 
-        try {
-            return messageRepository.findById(messageId).orElseThrow(NoSuchElementException:: new);
-        }
-        catch(DataAccessException e) {
-            new CustomDataAccessException("Something went wrong", e);
-        }
-
-        return null;
+        return messageRepository.findById(messageId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
     }
 
     public int deleteMessageByMessageId(Integer messageId) {
 
-        int rowsAffected = 0;
-        try {
-            rowsAffected = retrieveMessageByMessageId(messageId) == null ? 0 : 1;
+        int rowsAffected = retrieveMessageByMessageId(messageId) == null ? 0 : 1;
 
-            messageRepository.deleteById(messageId);
-        }
-        catch(DataAccessException e) {
-            new CustomDataAccessException("Something went wrong", e);
-        }
+        messageRepository.deleteById(messageId);
 
         return rowsAffected;
     }
 
     public int updateMessage(Integer messageId, Message newMessage) {
 
-        int rowsAffected = 0;
-        try {
-            Message oldMessage = retrieveMessageByMessageId(messageId);
-            rowsAffected = oldMessage == null ? 0 : 1;
+        Message oldMessage = messageRepository.findById(messageId)
+                                .orElseThrow(() -> new ResourceNotFoundException("No prior message exists"));
 
-            if (rowsAffected == 1) {
-                messageRepository.deleteById(oldMessage.getMessage_id());
-            }
-            else {
-                throw new NoSuchElementException("No prior message exists");
-            }
+        int rowsAffected = oldMessage == null ? 0 : 1;
 
-            String text = newMessage.getMessage_text();
-            if (text.isBlank()) {
-                throw new BlankException("Enter a valid message");
-            }
-            if (text.length() > 254) {
-                throw new ExcessiveCharactersException("Message is too long");
-            }
-            messageRepository.save(newMessage);
+        if (rowsAffected == 1) {
+            messageRepository.deleteById(messageId);
         }
-        catch(DataAccessException e) {
-            new CustomDataAccessException("Something went wrong", e);
+        else {
+            return rowsAffected;
         }
+
+        String text = newMessage.getMessage_text();
+        if (text.isBlank()) {
+            throw new BlankException("Enter a valid message");
+        }
+        if (text.length() > 254) {
+            throw new ExcessiveCharactersException("Message is too long");
+        }
+        messageRepository.save(newMessage);
 
         return rowsAffected;
     }
@@ -122,14 +92,7 @@ public class MessageService {
 
         List<Integer> user = new ArrayList<>();
         user.add(accountId);
-        try {
-            return messageRepository.findAllById(user);
-        }
-        catch (DataAccessException e) {
-            new CustomDataAccessException("Something went wrong", e);
-        }
-
-        return null;
+        return messageRepository.findAllById(user);
     }
     
 }

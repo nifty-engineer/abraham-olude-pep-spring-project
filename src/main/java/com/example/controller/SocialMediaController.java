@@ -10,7 +10,7 @@ import com.example.entity.Account;
 import com.example.entity.Message;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
-import com.example.exception.ExistingAccountException;
+import com.example.exception.RegistrationException;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -34,7 +34,7 @@ public class SocialMediaController {
             return ResponseEntity.status(200)
                             .body(registeredAccount);
         }
-        catch (ExistingAccountException e) {
+        catch (RegistrationException e) {
             e.printStackTrace();
             return ResponseEntity.status(409)
                     .body(account);

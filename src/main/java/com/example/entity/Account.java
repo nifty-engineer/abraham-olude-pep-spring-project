@@ -139,6 +139,5 @@ public class Account {
                 ", password='" + password + '\'' +
                 '}';
     }
-    
 }
 
