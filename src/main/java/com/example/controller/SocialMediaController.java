@@ -11,6 +11,11 @@ import com.example.entity.Message;
 import com.example.service.AccountService;
 import com.example.service.MessageService;
 import com.example.exception.RegistrationException;
+import com.example.exception.ResourceNotFoundException;
+import com.example.exception.AuthenticationException;
+import com.example.exception.BlankException;
+import com.example.exception.ExcessiveCharactersException;
+import com.example.exception.MessageCreationException;;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller using Spring. The endpoints you will need can be
@@ -29,142 +34,86 @@ public class SocialMediaController<T> {
     @PostMapping("/register")
     public ResponseEntity<Account> userRegistration(@RequestBody Account account) {
         
-        try {
-            Account registeredAccount = accountService.userRegistration(account);
-            return ResponseEntity.status(200)
-                            .body(registeredAccount);
-        }
-        catch (RegistrationException e) {
-            return handleDuplicateUsername(e, account);
-        }
-        catch (Exception e) {
-            e.printStackTrace();        
-            return ResponseEntity.status(400)
-                    .body(account);
-        }
+        Account registeredAccount = accountService.userRegistration(account);
+        return ResponseEntity.status(200)
+                    .body(registeredAccount);      
     }
 
     @PostMapping("/login")
     public ResponseEntity<Account> userLogin(@RequestBody Account account) {
 
-        try {
-            Account accountLogin = accountService.userLogin(account);
-            return ResponseEntity.status(200)
-                        .body(accountLogin);
-        }
-        catch (Exception e) {
-            return handleUnsuccessfulLogin(e, account);
-        }
+        Account accountLogin = accountService.userLogin(account);
+        return ResponseEntity.status(200)
+                    .body(accountLogin);
     }
 
 
     @PostMapping("/messages")
     public ResponseEntity<Message> createMessage(@RequestBody Message message) {
         
-        try {
-            Message createdMessage = messageService.createMessage(message);
-            return ResponseEntity.status(200)
-                            .body(createdMessage);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(400)
-                            .build();
-        }
+        Message createdMessage = messageService.createMessage(message);
+        return ResponseEntity.status(200)
+                    .body(createdMessage);       
     }
     
     @GetMapping("/messages")
     public ResponseEntity<List<Message>> retrieveAllMessages() {
 
-        try {
-            List<Message> messages = messageService.retrieveAllMessages();
-            return ResponseEntity.status(200)
-                        .body(messages);
-        }
-        catch (Exception e) {
-            return (ResponseEntity<List<Message>>) handleUnsuccessfulAction(e);
-        }
+        List<Message> messages = messageService.retrieveAllMessages();
+        return ResponseEntity.status(200)
+                    .body(messages);
     }
     
     @GetMapping("/messages/{message_id}")
     public ResponseEntity<Message> retrieveMessageByMessageId(@PathVariable String message_id) {
 
-        try {
-            Message message = messageService.retrieveMessageByMessageId(Integer.valueOf(message_id));
-            return ResponseEntity.status(200)
-                        .body(message);
-        }
-        catch (Exception e) {
-            return (ResponseEntity<Message>) handleUnsuccessfulAction(e);
-
-        }
+        Message message = messageService.retrieveMessageByMessageId(Integer.valueOf(message_id));
+        return ResponseEntity.status(200)
+                    .body(message);
     }
 
     @DeleteMapping("/messages/{message_id}")
     public ResponseEntity<Integer> deleteMessageByMessageId(@PathVariable String message_id) {
 
-        try {
-            int rowsAffected = messageService.deleteMessageByMessageId(Integer.valueOf(message_id));
-            return ResponseEntity.status(200)
-                        .body(rowsAffected);
-        }
-        catch (Exception e) {
-            return (ResponseEntity<Integer>) handleUnsuccessfulAction(e);
-
-        }
+        int rowsAffected = messageService.deleteMessageByMessageId(Integer.valueOf(message_id));
+        return rowsAffected == 1 ?
+                    ResponseEntity.status(200).body(rowsAffected) : 
+                    ResponseEntity.status(200).build();      
     }
 
     @PatchMapping("/messages/{message_id}")
     public ResponseEntity<Integer> updateMessage(@PathVariable String message_id, @RequestBody Message newMessage) {
 
-        try {
-            int rowsAffected = messageService.updateMessage(Integer.valueOf(message_id), newMessage);
-            return ResponseEntity.status(200)
-                        .body(rowsAffected);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(400)
-                        .build();
-        }
+        int rowsAffected = messageService.updateMessage(Integer.valueOf(message_id), newMessage);
+        return ResponseEntity.status(200)
+                    .body(rowsAffected);
     }
 
     @GetMapping("/accounts/{account_id}/messages")
     public ResponseEntity<List<Message>> retrieveAllMessagesForUser(@PathVariable String account_id) {
 
-        try {
-            List<Message> messages = messageService.retrieveAllMessagesForUser(Integer.valueOf(account_id));
-            return ResponseEntity.status(200)
-                        .body(messages);
-        }
-        catch (Exception e) {
-            return (ResponseEntity<List<Message>>) handleUnsuccessfulAction(e);
-        }
+        List<Message> messages = messageService.retrieveAllMessagesForUser(Integer.valueOf(account_id));
+        return ResponseEntity.status(200)
+                    .body(messages);
     }
 
     @ExceptionHandler(RegistrationException.class)
-    public ResponseEntity<Account> handleDuplicateUsername(RegistrationException e, Account account) {
-
+    public ResponseEntity<Account> handleDuplicateUsername(RegistrationException e) {
         e.printStackTrace();
-        return ResponseEntity.status(409)
-                    .body(account);
+        return ResponseEntity.status(409).build();
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Account> handleUnsuccessfulLogin(Exception e, Account account) {
-
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Account> handleUnsuccessfulLogin(Exception e) {
         e.printStackTrace();
-        return ResponseEntity.status(401)
-                    .body(account);
+        return ResponseEntity.status(401).build();
     }
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler({BlankException.class, ExcessiveCharactersException.class, 
+                MessageCreationException.class, ResourceNotFoundException.class})
     public ResponseEntity<T> handleUnsuccessfulAction(Exception e) {
-
         e.printStackTrace();
-        return ResponseEntity.status(200)
-                    .build();
+        return ResponseEntity.status(400).build();
     }
-
 
 }

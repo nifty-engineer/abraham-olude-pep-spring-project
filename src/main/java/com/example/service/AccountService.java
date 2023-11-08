@@ -44,6 +44,5 @@ public class AccountService {
         Account realAccount = accountRepository.findByUsernameAndPassword(account.getUsername(), account.getPassword())
                                     .orElseThrow(() -> new AuthenticationException("Either username or password is incorrect"));
         return accountRepository.save(realAccount);
-    }
-    
+    }    
 }

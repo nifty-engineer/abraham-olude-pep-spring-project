@@ -171,5 +171,6 @@ public class Message {
                 ", message_text='" + message_text + '\'' +
                 ", time_posted_epoch=" + time_posted_epoch +
                 '}';
-    }    
+    }
+        
 }

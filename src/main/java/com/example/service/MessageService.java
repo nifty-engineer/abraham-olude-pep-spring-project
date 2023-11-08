@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.example.entity.Message;
 import com.example.exception.BlankException;
 import com.example.exception.ExcessiveCharactersException;
-import com.example.exception.RegistrationException;
+import com.example.exception.MessageCreationException;
 import com.example.exception.ResourceNotFoundException;
 import com.example.repository.AccountRepository;
 import com.example.repository.MessageRepository;
@@ -38,7 +38,7 @@ public class MessageService {
         }
         
         accountRepository.findById(message.getPosted_by())
-                    .orElseThrow(() -> new RegistrationException("Message is not from a registered account"));
+                    .orElseThrow(() -> new MessageCreationException("Message is not from a registered account"));
 
         return messageRepository.save(message);            
     }
@@ -50,23 +50,23 @@ public class MessageService {
 
     public Message retrieveMessageByMessageId(Integer messageId) {
 
-        return messageRepository.findById(messageId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Message not found"));
+        return messageRepository.findById(messageId).orElseGet(() -> null);
     }
 
     public int deleteMessageByMessageId(Integer messageId) {
 
         int rowsAffected = retrieveMessageByMessageId(messageId) == null ? 0 : 1;
 
-        messageRepository.deleteById(messageId);
+        if (rowsAffected == 1) {
+            messageRepository.deleteById(messageId);
+        }
 
         return rowsAffected;
     }
 
     public int updateMessage(Integer messageId, Message newMessage) {
 
-        Message oldMessage = messageRepository.findById(messageId)
-                                .orElseThrow(() -> new ResourceNotFoundException("No prior message exists"));
+        Message oldMessage = messageRepository.findById(messageId).orElseGet(() -> null);
 
         int rowsAffected = oldMessage == null ? 0 : 1;
 
@@ -74,7 +74,7 @@ public class MessageService {
             messageRepository.deleteById(messageId);
         }
         else {
-            return rowsAffected;
+            throw new ResourceNotFoundException("No prior message available");
         }
 
         String text = newMessage.getMessage_text();
