@@ -19,7 +19,7 @@ import com.example.exception.RegistrationException;
  * refer to prior mini-project labs and lecture materials for guidance on how a controller may be built.
  */
 @RestController
-public class SocialMediaController {
+public class SocialMediaController<T> {
 
     @Autowired
     private AccountService accountService;
@@ -35,9 +35,7 @@ public class SocialMediaController {
                             .body(registeredAccount);
         }
         catch (RegistrationException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(409)
-                    .body(account);
+            return handleDuplicateUsername(e, account);
         }
         catch (Exception e) {
             e.printStackTrace();        
@@ -55,9 +53,7 @@ public class SocialMediaController {
                         .body(accountLogin);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(401)
-                        .body(account);
+            return handleUnsuccessfulLogin(e, account);
         }
     }
 
@@ -73,7 +69,7 @@ public class SocialMediaController {
         catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(400)
-                            .body(message);
+                            .build();
         }
     }
     
@@ -86,9 +82,7 @@ public class SocialMediaController {
                         .body(messages);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(200)
-                        .build();
+            return (ResponseEntity<List<Message>>) handleUnsuccessfulAction(e);
         }
     }
     
@@ -101,9 +95,8 @@ public class SocialMediaController {
                         .body(message);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(200)
-                        .build();
+            return (ResponseEntity<Message>) handleUnsuccessfulAction(e);
+
         }
     }
 
@@ -116,9 +109,8 @@ public class SocialMediaController {
                         .body(rowsAffected);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(200)
-                        .build();
+            return (ResponseEntity<Integer>) handleUnsuccessfulAction(e);
+
         }
     }
 
@@ -146,9 +138,33 @@ public class SocialMediaController {
                         .body(messages);
         }
         catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(200)
-                        .build();
+            return (ResponseEntity<List<Message>>) handleUnsuccessfulAction(e);
         }
-    }    
+    }
+
+    @ExceptionHandler(RegistrationException.class)
+    public ResponseEntity<Account> handleDuplicateUsername(RegistrationException e, Account account) {
+
+        e.printStackTrace();
+        return ResponseEntity.status(409)
+                    .body(account);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Account> handleUnsuccessfulLogin(Exception e, Account account) {
+
+        e.printStackTrace();
+        return ResponseEntity.status(401)
+                    .body(account);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<T> handleUnsuccessfulAction(Exception e) {
+
+        e.printStackTrace();
+        return ResponseEntity.status(200)
+                    .build();
+    }
+
+
 }
